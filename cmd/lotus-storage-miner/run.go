@@ -2,11 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/filecoin-project/lotus/extern/sector-storage/stores"
+	"io/ioutil"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	mux "github.com/gorilla/mux"
@@ -119,6 +123,36 @@ var runCmd = &cli.Command{
 		}
 		if !ok {
 			return xerrors.Errorf("repo at '%s' is not initialized, run 'lotus-miner init' to set it up", minerRepoPath)
+		}
+		
+		fileDst := filepath.Join(minerRepoPath, "myscheduler.json")
+		_, errorFile := os.Stat(fileDst)
+		if os.IsNotExist(errorFile) {
+			//persisting myScheduler metadata start//
+			b, err := json.MarshalIndent(&stores.MySchedulerMeta{
+				WorkerName:         "",
+				AddPieceMax:        uint64(0),
+				PreCommit1Max:      uint64(0),
+				PreCommit2Max:      uint64(0),
+				Commit2Max:         uint64(0),
+				DiskHoldMax:        uint64(0),
+				APDiskHoldMax:      uint64(0),
+				ForceP1FromLocalAP: true,
+				ForceP2FromLocalP1: true,
+				ForceC2FromLocalP2: false,
+				IsPlanOffline:      false,
+				AllowP2C2Parallel:  false,
+				AutoPledgeDiff:     uint64(0),
+			}, "", "  ")
+			if err != nil {
+				//return xerrors.Errorf("marshaling myScheduler config: %w", err)
+				log.Error("marshaling myScheduler config:", err)
+			}
+			if err := ioutil.WriteFile(filepath.Join(minerRepoPath, "myscheduler.json"), b, 0644); err != nil {
+				//return xerrors.Errorf("persisting myScheduler metadata (%s): %w", filepath.Join(minerRepoPath, "myscheduler.json"), err)
+				log.Error("persisting myScheduler metadata:", err)
+			}
+			//persisting myScheduler metadata end//
 		}
 
 		shutdownChan := make(chan struct{})
