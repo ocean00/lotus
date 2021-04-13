@@ -84,39 +84,86 @@ var sealingWorkersCmd = &cli.Command{
 			fmt.Printf("Worker %s, host %s%s\n", stat.id, color.MagentaString(stat.Info.Hostname), disabled)
 
 			var barCols = uint64(64)
-			cpuBars := int(stat.CpuUse * barCols / stat.Info.Resources.CPUs)
-			cpuBar := strings.Repeat("|", cpuBars) + strings.Repeat(" ", int(barCols)-cpuBars)
+			//cpuBars := int(stat.CpuUse * barCols / stat.Info.Resources.CPUs)
+			//cpuBar := strings.Repeat("|", cpuBars) + strings.Repeat(" ", int(barCols)-cpuBars)
 
-			fmt.Printf("\tCPU:  [%s] %d/%d core(s) in use\n",
-				color.GreenString(cpuBar), stat.CpuUse, stat.Info.Resources.CPUs)
+			//fmt.Printf("\tCPU:  [%s] %d/%d core(s) in use\n",
+			//	color.GreenString(cpuBar), stat.CpuUse, stat.Info.Resources.CPUs)
 
-			ramBarsRes := int(stat.Info.Resources.MemReserved * barCols / stat.Info.Resources.MemPhysical)
-			ramBarsUsed := int(stat.MemUsedMin * barCols / stat.Info.Resources.MemPhysical)
-			ramBar := color.YellowString(strings.Repeat("|", ramBarsRes)) +
-				color.GreenString(strings.Repeat("|", ramBarsUsed)) +
-				strings.Repeat(" ", int(barCols)-ramBarsUsed-ramBarsRes)
+			//ramBarsRes := int(stat.Info.Resources.MemReserved * barCols / stat.Info.Resources.MemPhysical)
+			//ramBarsUsed := int(stat.MemUsedMin * barCols / stat.Info.Resources.MemPhysical)
+			//ramBar := color.YellowString(strings.Repeat("|", ramBarsRes)) +
+			//	color.GreenString(strings.Repeat("|", ramBarsUsed)) +
+			//	strings.Repeat(" ", int(barCols)-ramBarsUsed-ramBarsRes)
+			if stat.Info.Resources.CPUs > 0 {
+				cpuBars := int(stat.CpuUse * barCols / stat.Info.Resources.CPUs)
+				cpuBar := strings.Repeat("|", cpuBars)
+				if int(barCols) > cpuBars {
+					cpuBar = strings.Repeat("|", cpuBars) + strings.Repeat(" ", int(barCols)-cpuBars)
+				}
 
-			vmem := stat.Info.Resources.MemPhysical + stat.Info.Resources.MemSwap
+			//vmem := stat.Info.Resources.MemPhysical + stat.Info.Resources.MemSwap
+				fmt.Printf("\tCPU:  [%s] %d/%d core(s) in use\n",
+					   color.GreenString(cpuBar), stat.CpuUse, stat.Info.Resources.CPUs)
+			}
 
-			vmemBarsRes := int(stat.Info.Resources.MemReserved * barCols / vmem)
-			vmemBarsUsed := int(stat.MemUsedMax * barCols / vmem)
-			vmemBar := color.YellowString(strings.Repeat("|", vmemBarsRes)) +
-				color.GreenString(strings.Repeat("|", vmemBarsUsed)) +
-				strings.Repeat(" ", int(barCols)-vmemBarsUsed-vmemBarsRes)
+			//vmemBarsRes := int(stat.Info.Resources.MemReserved * barCols / vmem)
+			//vmemBarsUsed := int(stat.MemUsedMax * barCols / vmem)
+			//vmemBar := color.YellowString(strings.Repeat("|", vmemBarsRes)) +
+			//	color.GreenString(strings.Repeat("|", vmemBarsUsed)) +
+			//	strings.Repeat(" ", int(barCols)-vmemBarsUsed-vmemBarsRes)
+			if stat.Info.Resources.MemPhysical > 0 {
+				ramBarsRes := int(stat.Info.Resources.MemReserved * barCols / stat.Info.Resources.MemPhysical)
+				ramBarsUsed := int(stat.MemUsedMin * barCols / stat.Info.Resources.MemPhysical)
+				ramBar := color.YellowString(strings.Repeat("|", ramBarsRes)) +
+				    color.GreenString(strings.Repeat("|", ramBarsUsed)) +
+				    strings.Repeat(" ", ramBarsUsed+ramBarsRes)
+				if int(barCols) > (ramBarsUsed + ramBarsRes) {
+				    ramBar = color.YellowString(strings.Repeat("|", ramBarsRes)) +
+					color.GreenString(strings.Repeat("|", ramBarsUsed)) +
+					strings.Repeat(" ", int(barCols)-ramBarsUsed-ramBarsRes)
+				}
+				vmem := stat.Info.Resources.MemPhysical + stat.Info.Resources.MemSwap
+				
+				vmemBarsRes := int(stat.Info.Resources.MemReserved * barCols / vmem)
+				vmemBarsUsed := int(stat.MemUsedMax * barCols / vmem)
+				vmemBar := color.YellowString(strings.Repeat("|", vmemBarsRes)) +
+				    color.GreenString(strings.Repeat("|", vmemBarsUsed)) +
+				    strings.Repeat(" ", vmemBarsUsed+vmemBarsRes)
+				if int(barCols) > (vmemBarsUsed + vmemBarsRes) {
+				    vmemBar = color.YellowString(strings.Repeat("|", vmemBarsRes)) +
+					color.GreenString(strings.Repeat("|", vmemBarsUsed)) +
+					strings.Repeat(" ", int(barCols)-vmemBarsUsed-vmemBarsRes)
+				}
 
-			fmt.Printf("\tRAM:  [%s] %d%% %s/%s\n", ramBar,
-				(stat.Info.Resources.MemReserved+stat.MemUsedMin)*100/stat.Info.Resources.MemPhysical,
-				types.SizeStr(types.NewInt(stat.Info.Resources.MemReserved+stat.MemUsedMin)),
-				types.SizeStr(types.NewInt(stat.Info.Resources.MemPhysical)))
+			//fmt.Printf("\tRAM:  [%s] %d%% %s/%s\n", ramBar,
+			//	(stat.Info.Resources.MemReserved+stat.MemUsedMin)*100/stat.Info.Resources.MemPhysical,
+			//	types.SizeStr(types.NewInt(stat.Info.Resources.MemReserved+stat.MemUsedMin)),
+			//	types.SizeStr(types.NewInt(stat.Info.Resources.MemPhysical)))
+				fmt.Printf("\tRAM:  [%s] %d%% %s/%s\n", ramBar,
+			            (stat.Info.Resources.MemReserved+stat.MemUsedMin)*100/stat.Info.Resources.MemPhysical,
+			            types.SizeStr(types.NewInt(stat.Info.Resources.MemReserved+stat.MemUsedMin)),
+				    types.SizeStr(types.NewInt(stat.Info.Resources.MemPhysical)))
 
-			fmt.Printf("\tVMEM: [%s] %d%% %s/%s\n", vmemBar,
-				(stat.Info.Resources.MemReserved+stat.MemUsedMax)*100/vmem,
-				types.SizeStr(types.NewInt(stat.Info.Resources.MemReserved+stat.MemUsedMax)),
-				types.SizeStr(types.NewInt(vmem)))
+			//fmt.Printf("\tVMEM: [%s] %d%% %s/%s\n", vmemBar,
+			//	(stat.Info.Resources.MemReserved+stat.MemUsedMax)*100/vmem,
+			//	types.SizeStr(types.NewInt(stat.Info.Resources.MemReserved+stat.MemUsedMax)),
+			//	types.SizeStr(types.NewInt(vmem)))
+				fmt.Printf("\tVMEM: [%s] %d%% %s/%s\n", vmemBar,
+			            (stat.Info.Resources.MemReserved+stat.MemUsedMax)*100/vmem,
+				    types.SizeStr(types.NewInt(stat.Info.Resources.MemReserved+stat.MemUsedMax)),
+				    types.SizeStr(types.NewInt(vmem)))
+			}
 
 			for _, gpu := range stat.Info.Resources.GPUs {
 				fmt.Printf("\tGPU: %s\n", color.New(gpuCol).Sprintf("%s, %sused", gpu, gpuUse))
 			}
+			
+			fmt.Printf("\tTypes: [ %s ]\n", stat.TaskTypes)
+			fmt.Printf("\tAPMax:%d  P1Max:%d  P2Max:%d  C2Max:%d  DiskHoldMax:%d  APDiskHoldMax:%d  BindAP:%t  BindP1:%t  BindP2:%t\n",
+		            stat.Info.Resources.AddPieceMax, stat.Info.Resources.PreCommit1Max, stat.Info.Resources.PreCommit2Max, stat.Info.Resources.Commit2Max,
+			    stat.Info.Resources.DiskHoldMax, stat.Info.Resources.APDiskHoldMax, stat.Info.Resources.ForceP1FromLocalAP, stat.Info.Resources.ForceP2FromLocalP1, stat.Info.Resources.ForceC2FromLocalP2)
+			fmt.Printf("\tTasks: [ %s ] hostname %s\n", stat.Tasks, stat.Info.Hostname)
 		}
 
 		return nil
